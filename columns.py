@@ -216,8 +216,7 @@ class GameState:
 
     def faller(self) -> Faller:
         return self._faller
-        
-    # Change to have asterisks around matches and to have one match at a time until self.tick()    
+
     def find_matches(self) -> bool:
         """
         Starting from the area closest to the current
