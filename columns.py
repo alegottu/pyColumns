@@ -104,35 +104,35 @@ class Faller:
         return self._position
 
 class GameState:
-    def __init__(self, board: [str] or Size):
+    def __init__(self, field: [str] or Size):
         """
         Builds a new game state that is empty if the given board
         only specifies size in rows and columns, 
         otherwise reads a list of strings representing rows
         to create the given game state.
         """
-        self._board = []
+        self._field = []
 
-        if type(board) == Size:
-            self._size = board
+        if type(field) == Size:
+            self._size = field
 
-            for column in range(board.columns):
-                self._board.append([])
-                for row in range(board.rows):
-                    self._board[-1].append(' ')
+            for column in range(field.columns):
+                self._field.append([])
+                for row in range(field.rows):
+                    self._field[-1].append(' ')
         else:
-            for column in range(len(board[0])):
-                self._board.append([])
-                for row in range(len(board)):
-                    self._board[-1].append(board[row][column])
+            for column in range(len(field[0])):
+                self._field.append([])
+                for row in range(len(field)):
+                    self._field[-1].append(field[row][column])
 
-            self._size = Size(len(self._board[0]), len(self._board))
+            self._size = Size(len(self._field[0]), len(self._field))
 
     def size(self) -> Size:
         return self._size
 
-    def board(self) -> [[str]]:
-        return self._board
+    def field(self) -> [[str]]:
+        return self._field
 
     def tick(self) -> None:
         """
@@ -142,11 +142,11 @@ class GameState:
         causing matches to disappear.
         """
         fall = False
-        for column in range(len(self._board)):
-            for row in range(len(self._board[column])):
-                if '*' in self._board[column][row]:
+        for column in range(len(self._field)):
+            for row in range(len(self._field[column])):
+                if '*' in self._field[column][row]:
                     fall = True
-                    self._board[column][row] = ' '
+                    self._field[column][row] = ' '
         else:
             if fall:
                 self.fall() # assumes that no faller is in play due to a match being found
@@ -155,12 +155,12 @@ class GameState:
         try:
             if self._faller.landed():
                 for piece in range(len(self._faller.pieces())):
-                    self._board[self._faller.position().column][self._faller.position().row - piece] = self._faller.pieces()[-piece - 1][1]
+                    self._field[self._faller.position().column][self._faller.position().row - piece] = self._faller.pieces()[-piece - 1][1]
                 else:
                     self.find_matches()
                     self._faller = None
             else:
-                self._faller.fall(1, self._board[self._faller.position().column])
+                self._faller.fall(1, self._field[self._faller.position().column])
         except AttributeError:  # if no faller has been created yet and no matches were created and searched initially
             pass
 
@@ -174,11 +174,11 @@ class GameState:
         """
         for column in range(self._size.columns):
             for row in range(self._size.rows):
-                if self._board[column][row] != ' ':
+                if self._field[column][row] != ' ':
                     for cell in range(1, self._size.rows - row):
-                        if self._board[column][-cell] == ' ':
-                            self._board[column][-cell] = self._board[column][row]
-                            self._board[column][row] = ' '
+                        if self._field[column][-cell] == ' ':
+                            self._field[column][-cell] = self._field[column][row]
+                            self._field[column][row] = ' '
 
     def new_faller(self, faller: Faller) -> None:
         """
@@ -187,8 +187,8 @@ class GameState:
         """
         self._faller = faller
 
-        if not self._board[self._faller.position().column][0].isalpha():
-            self._board[self._faller.position().column][0] = faller.head()
+        if not self._field[self._faller.position().column][0].isalpha():
+            self._field[self._faller.position().column][0] = faller.head()
             self._faller._position = Position(self._faller.position().column, 0)
         else:
             raise GameOverError
@@ -201,14 +201,14 @@ class GameState:
         """
         for row in range(len(self._faller.pieces())):
             try:
-                if self._board[self._faller.position().column + direction][self._faller.position().row - row] != ' ':
+                if self._field[self._faller.position().column + direction][self._faller.position().row - row] != ' ':
                     raise InvalidMoveError
             except IndexError:
                 pass
             else:
                 try:
-                    self._board[self._faller.position().column + direction][self._faller.position().row - row] = self._faller.pieces()[-row - 1]
-                    self._board[self._faller.position().column][self._faller.position().row - row] = ' '
+                    self._field[self._faller.position().column + direction][self._faller.position().row - row] = self._faller.pieces()[-row - 1]
+                    self._field[self._faller.position().column][self._faller.position().row - row] = ' '
                 except IndexError:
                     pass
         else:
@@ -264,8 +264,8 @@ class GameState:
             else:
                 return False
 
-        for column in range(len(self._board)):
-            for row in range(len(self._board[column])):
+        for column in range(len(self._field)):
+            for row in range(len(self._field[column])):
                 if find_match(self, Position(column, row)):
                     found = True
         
