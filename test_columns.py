@@ -11,24 +11,24 @@ class GameStateTests(test.TestCase):
             '  V X'])
 
     def test_new_game_state_is_empty(self):
-        for row in GameState(Size(100, 100)).board():
+        for row in GameState(Size(100, 100)).field():
             for cell in row:
                 self.assertEqual(cell, ' ')
 
-    def test_new_board_is_assembled_correctly(self):
-        self.assertEqual(self.test.board(), \
+    def test_new_field_is_assembled_correctly(self):
+        self.assertEqual(self.test.field(), \
             [['S', 'S', ' '],
             [' ', ' ', ' '],
             ['V', 'V', 'V'],
             [' ', ' ', ' '],
             ['Y', ' ', 'X']])
 
-    def test_custom_board_size(self):
+    def test_custom_field_size(self):
         self.assertEqual(self.test.size(), Size(3, 5))
 
     def test_pieces_fall_after_making_new_board(self):
         self.test.fall()
-        self.assertEqual(self.test.board(), \
+        self.assertEqual(self.test.field(), \
             [[' ', 'S', 'S'],
             [' ', ' ', ' '],
             ['V', 'V', 'V'],
@@ -36,31 +36,31 @@ class GameStateTests(test.TestCase):
             [' ', 'Y', 'X']])
 
     def test_new_faller_head_is_shown(self):
-        self.assertEqual(self.new.board()[1][0], '[X]')
-        self.assertEqual(self.new.board()[1][1], ' ')
+        self.assertEqual(self.new.field()[1][0], '[X]')
+        self.assertEqual(self.new.field()[1][1], ' ')
 
     def test_current_faller_can_move_laterally(self):
-        self.new.faller().fall(2, self.new.board()[1])
+        self.new.faller().fall(2, self.new.field()[1])
         self.new.move_faller(-1)
-        self.assertEqual(self.new.board()[0][0:3], ['[Y]', '[Z]', '[X]'])
-        self.assertEqual(self.new.board()[1][0:3], [' ', ' ', ' '])
+        self.assertEqual(self.new.field()[0][0:3], ['[Y]', '[Z]', '[X]'])
+        self.assertEqual(self.new.field()[1][0:3], [' ', ' ', ' '])
 
     def test_current_faller_can_be_blocked(self):
-        self.new.faller().fall(None, self.new.board()[1])
+        self.new.faller().fall(None, self.new.field()[1])
         self.new.tick()
         self.new.new_faller(Faller(2, 'XXX'))
-        self.new.faller().fall(None, self.new.board()[2])
+        self.new.faller().fall(None, self.new.field()[2])
         with self.assertRaises(InvalidMoveError):
             self.new.move_faller(-1)
 
     def test_current_faller_lands_when_it_can_no_longer_move_down(self):
-        self.new.faller().fall(None, self.new.board()[1])
-        self.assertEqual(self.new.board()[1][7:10], ['|Y|', '|Z|', '|X|'])
+        self.new.faller().fall(None, self.new.field()[1])
+        self.assertEqual(self.new.field()[1][7:10], ['|Y|', '|Z|', '|X|'])
 
     def test_current_faller_freezes_once_landed(self):
-        self.new.faller().fall(None, self.new.board()[1])
+        self.new.faller().fall(None, self.new.field()[1])
         self.new.tick()
-        self.assertEqual(self.new.board()[1][7:10], ['Y', 'Z', 'X'])
+        self.assertEqual(self.new.field()[1][7:10], ['Y', 'Z', 'X'])
 
     def test_matches_can_be_found(self):
         test = GameState(\
@@ -68,7 +68,7 @@ class GameStateTests(test.TestCase):
             'ZYX',
             'ZZX'])
         test.find_matches()
-        self.assertEqual(test.board()[2], ['*X*', '*X*', '*X*'])
+        self.assertEqual(test.field()[2], ['*X*', '*X*', '*X*'])
 
     def test_diagonal_matches_can_be_found(self):
         test = GameState(\
@@ -76,7 +76,7 @@ class GameStateTests(test.TestCase):
             'ZYX',
             'ZZY'])
         test.find_matches()
-        self.assertEqual(test.board(), [['*Y*', 'Z', 'Z'], ['Z', '*Y*', 'Z'], ['X', 'X', '*Y*']])
+        self.assertEqual(test.field(), [['*Y*', 'Z', 'Z'], ['Z', '*Y*', 'Z'], ['X', 'X', '*Y*']])
 
     def test_matches_greater_than_3_can_be_found(self):
         test = GameState(\
@@ -85,7 +85,7 @@ class GameStateTests(test.TestCase):
             'TYV',
             'TVV'])
         test.find_matches()
-        self.assertEqual(test.board()[0], ['*T*', '*T*', '*T*', '*T*'])
+        self.assertEqual(test.field()[0], ['*T*', '*T*', '*T*', '*T*'])
 
     def test_collateral_matches_can_be_found(self):
         test = GameState(\
@@ -96,7 +96,7 @@ class GameStateTests(test.TestCase):
         for _ in range(2):
             test.find_matches()
             test.tick()
-        for column in test.board():
+        for column in test.field():
             for cell in column:
                 self.assertEqual(cell, ' ')
 
@@ -108,7 +108,14 @@ class GameStateTests(test.TestCase):
             test.new_faller(Faller(0, 'VVT'))
 
     def test_game_does_not_end_when_partial_faller_triggers_a_match(self):
-        pass
+        test = GameState(\
+            ['   ',
+            'YXY',
+            'XYX'])
+        test.new_faller(Faller(2, 'ZYY'))
+        test.faller().fall(None, test.field()[2])
+        test.tick()
+        self.assertEqual(test.field()[2], [' ', 'Z', 'X'])
 
 class FallerTests(test.TestCase):
     def setUp(self):
